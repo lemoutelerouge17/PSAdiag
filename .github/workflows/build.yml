@@ -1,0 +1,45 @@
+name: Build Windows
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.7.3'
+          arch: 'win64_msvc2019_64'
+          modules: 'qtcharts qtserialport'
+
+      - name: Configurer
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compiler
+        run: cmake --build build --config Release --parallel
+
+      - name: Tests
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Deployer
+        shell: cmd
+        run: |
+          mkdir Release
+          copy build\Release\PSADiag.exe Release\
+          windeployqt --release --compiler-runtime Release\PSADiag.exe
+
+      - name: Installateur Inno Setup
+        shell: cmd
+        run: '"%ProgramFiles(x86)%\Inno Setup 6\iscc.exe" Installer\PSADiag.iss'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PSADiag-Windows
+          path: |
+            Release
+            Output/*.exe
