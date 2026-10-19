@@ -1,0 +1,8 @@
+build/
+build-*/
+Release/
+Output/
+CMakeLists.txt.user*
+*.db
+*.db-wal
+*.db-shm
